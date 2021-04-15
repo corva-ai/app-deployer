@@ -22,7 +22,7 @@ try {
     core.info('Requesting App ID from App Key')
     let client = new http.HttpClient('corva/app-deployer');
     let response = client.getJson(`{apiURL}/v2/apps?app_key={appKey}`);
-    let data = await response.readBody();
+    let data = response.readBody();
     core.debug(data);
     let code = response.message.statusCode;
     if (code !== 200) {
@@ -50,7 +50,7 @@ try {
     core.info('Uploading package')
     response = client.post(`{apiURL}/v2/apps/{appId}/packages/upload`, payload);
     code = response.message.statusCode;
-    data = await response.readBody();
+    data = response.readBody();
     if (code !== 200) {
         core.error(data.message);
         core.setFailed(`Upload failed: {data.message}`);
@@ -64,7 +64,7 @@ try {
     if (notes) {
         core.info('Updating package notes');
         response = client.patch(`{apiURL}/v2/apps/{appId}/packages/{packageId}`, {notes: notes});
-        data = await response.readBody();
+        data = response.readBody();
         if (code !== 200) {
             core.error('Unable to update package notes. Please manually update notes in Dev Center.');
             core.error(data.message);
@@ -79,7 +79,7 @@ try {
     while (statusChecks < maximumChecks) {
         statusChecks += 1;
         response = client.getJson(`{apiURL}/v2/apps/{appId}/packages/{packageId}`);
-        data = await response.readBody();
+        data = response.readBody();
         status = data.data.attributes.status;
 
         core.info(`Checking package status [{statusChecks}]: {status}`);
