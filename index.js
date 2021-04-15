@@ -112,6 +112,8 @@ async function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, s
         if (response.status !== 200) {
             throw new Error(`Upload failed: ${response.data.message}`);
         }
+        core.info(response);
+        core.info(response.data);
         const packageId = parseInt(response.data.data[0].id, 10);
         core.info(`Package uploaded: ${packageId}`);
 
