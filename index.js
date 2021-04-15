@@ -103,7 +103,7 @@ async function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, s
     core.info('Uploading package')
 
     const form = new FormData();
-    form.append('package', fs.readFileSync(packageFilePath));
+    form.append('package', fs.readFileSync(packageFilePath, 'binary'));
     form.append('skip_analysis', skipAnalysis);
     form.append('skip_testing', skipTesting);
 
