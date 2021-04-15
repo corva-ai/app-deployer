@@ -68,8 +68,16 @@ function generatePackageFile() {
     const packagePath = __dirname + '/package.zip';
     const stream = fs.createWriteStream(packagePath);
     const archive = archiver.create('zip', {});
+    archive.on('error', function(error) {
+        core.info(error);
+    });
+    archive.on('entry', function(entry) {
+        core.info(entry.name);
+    });
+
     archive.pipe(stream);
     archive.directory(__dirname, false);
+    archive.glob('*', {cwd: __dirname});
     archive.finalize();
 
     core.info('Package successfully archived to a zip file');
