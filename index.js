@@ -29,11 +29,11 @@ async function runner() {
         axios.defaults.headers.common['User-Agent'] = `corva/app-deployer`;
         axios.defaults.headers.common['X-Corva-App'] = appKey;
 
-        let appId = convertAppKeyToId(appKey);
+        let appId = await convertAppKeyToId(appKey);
         let packageFile = generatePackageFile();
-        let packageId = uploadPackageFile(apiURL, appId, packageFile, skipTesting, skipTesting);
-        updateNotes(apiURL, appId, packageId, notes);
-        let status = pollForPackageCompletion(apiURL, appId, packageId, 50);
+        let packageId = await uploadPackageFile(apiURL, appId, packageFile, skipTesting, skipTesting);
+        await updateNotes(apiURL, appId, packageId, notes);
+        let status = await pollForPackageCompletion(apiURL, appId, packageId, 50);
     
         core.setOutput('package-id', packageId);
         core.setOutput('package-status', status);
@@ -42,7 +42,7 @@ async function runner() {
     }
 }
 
-function convertAppKeyToId(appKey) {
+async function convertAppKeyToId(appKey) {
     core.info('Requesting App ID from App Key');
     let response = await axios.get(`${apiURL}/v2/apps?app_key=${appKey}`);
 
@@ -77,7 +77,7 @@ function generatePackageFile() {
     return packagePath;
 }
 
-function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, skipTesting) {
+async function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, skipTesting) {
     core.info('Uploading package')
 
     const form = new FormData();
@@ -96,14 +96,14 @@ function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, skipTes
     return packageId;
 }
 
-function updateNotes(apiURL, appId, packageId, notes) {
+async function updateNotes(apiURL, appId, packageId, notes) {
     if (!notes) {
         core.info('No package version notes. Continuing.');
         return;
     }
 
     core.info('Updating package version notes');
-    response = axios.patch(`${apiURL}/v2/apps/${appId}/packages/${packageId}`, {notes: notes});
+    response = await axios.patch(`${apiURL}/v2/apps/${appId}/packages/${packageId}`, {notes: notes});
     if (response.status !== 200) {
         core.error('Unable to update package notes. Please manually update notes in Dev Center.');
         core.error(response.data.message);
@@ -111,7 +111,7 @@ function updateNotes(apiURL, appId, packageId, notes) {
     }
 }
 
-function pollForPackageCompletion(apiURL, appId, packageId, maximumChecks) {
+async function pollForPackageCompletion(apiURL, appId, packageId, maximumChecks) {
     let statusChecks = 0;
     let status = '';
     let finalized = false;
