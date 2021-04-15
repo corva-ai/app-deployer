@@ -21,6 +21,11 @@ try {
 
     core.info('Requesting App ID from App Key')
     let client = new http.HttpClient('corva/app-deployer');
+    client.requestOptions = {
+        headers: {
+            'Authorization': `API ${apiKey}`
+        }
+    };
     let response = client.get(`${apiURL}/v2/apps?app_key=${appKey}`);
     let data = JSON.parse(response.readBody());
     core.debug(data);
