@@ -67,7 +67,8 @@ async function generatePackageFile() {
     core.info('Generating zipped package for app');
 
     core.info('Copying files for packaging');
-    const tempStorage = os.tmpdir();
+    const tempStorage = path.join(os.tmpdir(), Math.floor(Math.random() * 10000).toString());
+    io.mkdirP(tempStorage);
     io.cp('./', tempStorage, {recursive: true});
 
     core.info('Removing blacklisted directories');
