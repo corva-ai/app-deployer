@@ -104,4 +104,4 @@ async function runner() {
     }
 }
 
-await runner();
+runner();
