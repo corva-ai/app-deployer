@@ -19,7 +19,7 @@
   "homepage": "https://github.com/corva-ai/app-deployer#readme",
   "dependencies": {
     "@actions/core": "^1.2.7",
-    "@actions/github": "^4.0.0",
+    "@actions/io": "^1.1.0",
     "archiver": "^5.3.0",
     "axios": "^0.21.1",
     "form-data": "^4.0.0"

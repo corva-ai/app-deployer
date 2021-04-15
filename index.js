@@ -3,7 +3,7 @@ const axios = require('axios').default;
 const core = require('@actions/core');
 const FormData = require('form-data');
 const fs = require('fs');
-const github = require('@actions/github');
+const io = require('@actions/io');
 const os = require('os');
 const path = require('path');
 
@@ -66,6 +66,17 @@ async function convertAppKeyToId(apiURL, appKey) {
 async function generatePackageFile() {
     core.info('Generating zipped package for app');
 
+    core.info('Copying files for packaging');
+    const tempStorage = os.tmpdir();
+    io.cp('./', tempStorage, {recursive: true});
+
+    core.info('Removing blacklisted directories');
+    const blacklist = ['.git', '.gitignore'];
+    for (blacklistPath in blacklist) {
+        io.rmRF(path.join(tempStorage, blacklistPath));
+    }
+
+    core.info('Archiving files to zip')
     const packagePath = path.join(os.tmpdir(), 'package.zip');
     const stream = fs.createWriteStream(packagePath);
     const archive = archiver.create('zip', {});
@@ -77,7 +88,7 @@ async function generatePackageFile() {
     });
 
     archive.pipe(stream);
-    archive.directory('./', false);
+    archive.directory(tempStorage, false);
     await archive.finalize();
 
     core.info('Package successfully archived to a zip file');
