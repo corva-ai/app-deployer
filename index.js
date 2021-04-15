@@ -44,7 +44,7 @@ async function runner() {
 
 async function convertAppKeyToId(apiURL, appKey) {
     core.info('Requesting App ID from App Key');
-    let response = await axios.get(`${apiURL}/v2/apps?app_key=${appKey}`);
+    const response = await axios.get(`${apiURL}/v2/apps?app_key=${appKey}`);
 
     if (response.status !== 200) {
         throw new Error(`Invalid response while looking up App ${appKey}: ${data.message}`) 
@@ -85,15 +85,18 @@ async function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, s
     form.append('skip_analysis', skipAnalysis);
     form.append('skip_testing', skipTesting);
 
-    response = await axios.post(`${apiURL}/v2/apps/${appId}/packages/upload`, form, { headers: form.getHeaders() });
-    if (response.status !== 200) {
-        throw new Error(`Upload failed: ${response.data.message}`);
+    try {
+        const response = await axios.post(`${apiURL}/v2/apps/${appId}/packages/upload`, form, { headers: form.getHeaders() });
+        if (response.status !== 200) {
+            throw new Error(`Upload failed: ${response.data.message}`);
+        }
+        const packageId = parseInt(response.data.data[0].id, 10);
+        core.info(`Package uploaded: ${packageId}`);
+
+        return packageId;
+    } catch (error) {
+        throw new Error(`Upload failed: ${error.response.data.message}`);
     }
-
-    const packageId = parseInt(response.data.data[0].id, 10);
-    core.info(`Package uploaded: ${packageId}`);
-
-    return packageId;
 }
 
 async function updateNotes(apiURL, appId, packageId, notes) {
@@ -103,7 +106,7 @@ async function updateNotes(apiURL, appId, packageId, notes) {
     }
 
     core.info('Updating package version notes');
-    response = await axios.patch(`${apiURL}/v2/apps/${appId}/packages/${packageId}`, {notes: notes});
+    const response = await axios.patch(`${apiURL}/v2/apps/${appId}/packages/${packageId}`, {notes: notes});
     if (response.status !== 200) {
         core.error('Unable to update package notes. Please manually update notes in Dev Center.');
         core.error(response.data.message);
@@ -121,7 +124,7 @@ async function pollForPackageCompletion(apiURL, appId, packageId, maximumChecks)
 
     while (statusChecks < maximumChecks) {
         statusChecks += 1;
-        response = await axios.get(`${apiURL}/v2/apps/${appId}/packages/${packageId}`);
+        const response = await axios.get(`${apiURL}/v2/apps/${appId}/packages/${packageId}`);
         status = response.data.attributes.status;
 
         core.info(`Checking package status [${statusChecks}]: ${status}`);
