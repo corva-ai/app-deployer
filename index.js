@@ -65,11 +65,11 @@ async function convertAppKeyToId(apiURL, appKey) {
 function generatePackageFile() {
     core.info('Generating zipped package for app');
 
-    const packagePath = path.resolve('package.zip');
+    const packagePath = __dirname + '/package.zip';
     const stream = fs.createWriteStream(packagePath);
     const archive = archiver.create('zip', {});
     archive.pipe(stream);
-    archive.directory('.', false);
+    archive.directory(__dirname, false);
     archive.finalize();
 
     core.info('Package successfully archived to a zip file');
