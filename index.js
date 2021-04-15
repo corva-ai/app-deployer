@@ -74,7 +74,9 @@ async function generatePackageFile() {
     core.info('Removing blacklisted directories');
     const blacklist = ['.git', '.gitignore'];
     for (blacklistPath in blacklist) {
-        await io.rmRF(path.join(tempStorage, blacklistPath));
+        blacklistPath = path.join(tempStorage, blacklistPath);
+        core.info(`Removing ${blacklistPath}`);
+        await io.rmRF(blacklistPath);
     }
 
     core.info('Archiving files to zip')
