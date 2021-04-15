@@ -134,11 +134,15 @@ async function updateNotes(apiURL, appId, packageId, notes) {
     }
 
     core.info('Updating package version notes');
-    const response = await axios.patch(`${apiURL}/v2/apps/${appId}/packages/${packageId}`, {notes: notes});
-    if (response.status !== 200) {
-        core.error('Unable to update package notes. Please manually update notes in Dev Center.');
-        core.error(response.data.message);
-        core.error('Continuing to verify package upload');
+    try {
+        const response = await axios.patch(`${apiURL}/v2/apps/${appId}/packages/${packageId}`, {notes: notes});
+        if (response.status !== 200) {
+            core.error('Unable to update package notes. Please manually update notes in Dev Center.');
+            core.error(response.data.message);
+            core.error('Continuing to verify package upload');
+        }
+    } catch (error) {
+        core.error(JSON.stringify(error.response.data));
     }
 }
 
