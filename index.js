@@ -21,8 +21,8 @@ try {
 
     core.info('Requesting App ID from App Key')
     let client = new http.HttpClient('corva/app-deployer');
-    let response = client.getJson(`${apiURL}/v2/apps?app_key=${appKey}`);
-    let data = response.readBody();
+    let response = client.get(`${apiURL}/v2/apps?app_key=${appKey}`);
+    let data = JSON.parse(response.readBody());
     core.debug(data);
     let code = response.message.statusCode;
     if (code !== 200) {
@@ -50,7 +50,7 @@ try {
     core.info('Uploading package')
     response = client.post(`${apiURL}/v2/apps/${appId}/packages/upload`, payload);
     code = response.message.statusCode;
-    data = response.readBody();
+    data = JSON.parse(response.readBody());
     if (code !== 200) {
         core.error(data.message);
         core.setFailed(`Upload failed: ${data.message}`);
@@ -64,7 +64,7 @@ try {
     if (notes) {
         core.info('Updating package notes');
         response = client.patch(`${apiURL}/v2/apps/${appId}/packages/${packageId}`, {notes: notes});
-        data = response.readBody();
+        data = JSON.parse(response.readBody());
         if (code !== 200) {
             core.error('Unable to update package notes. Please manually update notes in Dev Center.');
             core.error(data.message);
@@ -78,8 +78,8 @@ try {
     core.debug('Polling for package status updates');
     while (statusChecks < maximumChecks) {
         statusChecks += 1;
-        response = client.getJson(`${apiURL}/v2/apps/${appId}/packages/${packageId}`);
-        data = response.readBody();
+        response = client.get(`${apiURL}/v2/apps/${appId}/packages/${packageId}`);
+        data = JSON.parse(response.readBody());
         status = data.data.attributes.status;
 
         core.info(`Checking package status [${statusChecks}]: ${status}`);
