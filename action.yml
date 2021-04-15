@@ -1,0 +1,36 @@
+name: Corva App Deployer
+description: Deploys apps to Corva Dev Center
+author: Jordan Ambra
+branding:
+  icon: 'upload-cloud'
+  color: 'blue'
+inputs:
+  api-key:
+    description: 'API key for deployment to Dev Center'
+    required: true
+  api-url:
+    description: 'API URL for the Corva Platform API'
+    required: false
+    default: 'https://api.corva.ai'
+  app-key:
+    description: 'App key for uniquely identifying your app in Dev Center'
+    required: true
+  notes:
+    description: 'Notes to set for this version of the package'
+    required: false
+  skip-analysis:
+    description: 'Skip static analysis (linters) such as flake8 or pylint'
+    required: false
+    default: false
+  skip-testing:
+    description: 'Skip automated testing such as pytest'
+    required: false
+    default: false
+outputs:
+  package-id:
+    description: 'Package ID that was deployed'
+  package-status:
+    description: 'Final status of the deployed package (draft is a successful deploy)'
+runs:
+  using: 'node12'
+  main: 'index.js'
