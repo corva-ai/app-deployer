@@ -66,15 +66,15 @@ async function convertAppKeyToId(apiURL, appKey) {
 async function generatePackageFile() {
     core.info('Generating zipped package for app');
 
-    core.info('Copying files for packaging');
     const tempStorage = path.join(os.tmpdir(), Math.floor(Math.random() * 10000).toString());
-    io.mkdirP(tempStorage);
-    io.cp('./', tempStorage, {recursive: true});
+    core.info(`Copying files for packaging ${tempStorage}`);
+    await io.mkdirP(tempStorage);
+    await io.cp('./', tempStorage, {recursive: true});
 
     core.info('Removing blacklisted directories');
     const blacklist = ['.git', '.gitignore'];
     for (blacklistPath in blacklist) {
-        io.rmRF(path.join(tempStorage, blacklistPath));
+        await io.rmRF(path.join(tempStorage, blacklistPath));
     }
 
     core.info('Archiving files to zip')
