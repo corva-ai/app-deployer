@@ -1,6 +1,10 @@
+const archiver = require('archiver');
+const axios = require('axios').default;
 const core = require('@actions/core');
+const FormData = require('form-data');
+const fs = require('fs');
 const github = require('@actions/github');
-const http = require('@actions/http-client');
+const path = require('path');
 
 async function runner() {
     try {
@@ -19,90 +23,128 @@ async function runner() {
         core.debug(`Notes: ${notes}`);
         core.debug(`Skip Analysis?: ${skipAnalysis}`);
         core.debug(`Skip Testing?: ${skipTesting}`);
+
+        // Set up defaults for all API requests
+        axios.defaults.headers.common['Authorization'] = `API ${apiKey}`;
+        axios.defaults.headers.common['User-Agent'] = `corva/app-deployer`;
+        axios.defaults.headers.common['X-Corva-App'] = appKey;
+
+        let appId = convertAppKeyToId(appKey);
+        let packageFile = generatePackageFile();
+        let packageId = uploadPackageFile(apiURL, appId, packageFile, skipTesting, skipTesting);
+        updateNotes(apiURL, appId, packageId, notes);
+        let status = pollForPackageCompletion(apiURL, appId, packageId, 50);
     
-        core.info('Requesting App ID from App Key')
-        let client = new http.HttpClient('corva/app-deployer');
-        client.requestOptions = {
-            headers: {
-                'Authorization': `API ${apiKey}`
-            }
-        };
-        let response = await client.getJson(`${apiURL}/v2/apps?app_key=${appKey}`);
-        let data = response.result;
-        core.debug(data);
-        if (response.statusCode !== 200) {
-            core.setFailed(`Invalid response while looking up App ${appKey}: ${data.message}`);
-            return;
-        }
-    
-        if (!data || !data.data || data.data.length === 0) {
-            core.setFailed(`App ${appKey} not found, or your API key doesn't have permissions to see it`);
-            return;
-        }
-    
-        // TODO: Generate a package zip file
-        core.info('Generating zipped package for app')
-        packageFile = null;
-     
-        const appId = parseInt(data.data[0].id, 10);
-        core.info(`App ID: ${appId}`)
-        const payload = {
-            package: packageFile,
-            skip_analysis: skipAnalysis,
-            skip_testing: skipTesting,
-        };
-    
-        core.info('Uploading package')
-        
-        response = await client.postJson(`${apiURL}/v2/apps/${appId}/packages/upload`, payload);
-        data = response.result;
-        if (response.statuscode !== 200) {
-            core.error(data.message);
-            core.setFailed(`Upload failed: ${data.message}`);
-            return;
-        }
-    
-        const packageId = parseInt(data.data[0].id, 10);
-        core.info(`Package ID: ${packageId}`);
         core.setOutput('package-id', packageId);
-    
-        if (notes) {
-            core.info('Updating package notes');
-            response = client.patchJson(`${apiURL}/v2/apps/${appId}/packages/${packageId}`, {notes: notes});
-            data = response.result;
-            if (response.statusCode !== 200) {
-                core.error('Unable to update package notes. Please manually update notes in Dev Center.');
-                core.error(data.message);
-                core.error('Continuing to verify package upload');
-            }
-        }
-    
-        let statusChecks = 0;
-        const maximumChecks = 30;
-        let status = '';
-        core.debug('Polling for package status updates');
-        while (statusChecks < maximumChecks) {
-            statusChecks += 1;
-            response = await client.getJson(`${apiURL}/v2/apps/${appId}/packages/${packageId}`);
-            data = response.result;
-            status = data.data.attributes.status;
-    
-            core.info(`Checking package status [${statusChecks}]: ${status}`);
-    
-            if (status === 'failure') {
-                core.error('Package build failed');
-                core.error(data.data.attributes.notes);
-                break;
-            } else if (status === 'draft') {
-                core.info('Successful package upload');
-                break;
-            }
-        }
-    
         core.setOutput('package-status', status);
     } catch (error) {
         core.setFailed(error.message);
     }
+}
+
+function convertAppKeyToId(appKey) {
+    core.info('Requesting App ID from App Key');
+    let response = await axios.get(`${apiURL}/v2/apps?app_key=${appKey}`);
+
+    if (response.status !== 200) {
+        throw new Error(`Invalid response while looking up App ${appKey}: ${data.message}`) 
+    }
+
+    core.debug(response.data);
+    
+    if (!response.data || !response.data.data || response.data.data.length === 0) {
+        throw new Error(`App ${appKey} not found, or your API key doesn't have permissions to see it`);
+    }
+
+    let appId = parseInt(response.data.data[0].id, 10);
+    core.info(`App ID: ${appId}`)
+
+    return appId;
+}
+
+function generatePackageFile() {
+    core.info('Generating zipped package for app');
+
+    const packagePath = path.resolve('package.zip');
+    const stream = fs.createWriteStream(packagePath);
+    const archive = archiver.create('zip', {});
+    archive.pipe(stream);
+    archive.directory('.', false);
+    archive.finalize();
+
+    core.info('Package successfully archived to a zip file');
+
+    return packagePath;
+}
+
+function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, skipTesting) {
+    core.info('Uploading package')
+
+    const form = new FormData();
+    form.append('package', fs.createReadStream(packageFilePath));
+    form.append('skip_analysis', skipAnalysis);
+    form.append('skip_testing', skipTesting);
+
+    response = await axios.post(`${apiURL}/v2/apps/${appId}/packages/upload`, form, { headers: form.getHeaders() });
+    if (response.status !== 200) {
+        throw new Error(`Upload failed: ${response.data.message}`);
+    }
+
+    const packageId = parseInt(response.data.data[0].id, 10);
+    core.info(`Package uploaded: ${packageId}`);
+
+    return packageId;
+}
+
+function updateNotes(apiURL, appId, packageId, notes) {
+    if (!notes) {
+        core.info('No package version notes. Continuing.');
+        return;
+    }
+
+    core.info('Updating package version notes');
+    response = axios.patch(`${apiURL}/v2/apps/${appId}/packages/${packageId}`, {notes: notes});
+    if (response.status !== 200) {
+        core.error('Unable to update package notes. Please manually update notes in Dev Center.');
+        core.error(response.data.message);
+        core.error('Continuing to verify package upload');
+    }
+}
+
+function pollForPackageCompletion(apiURL, appId, packageId, maximumChecks) {
+    let statusChecks = 0;
+    let status = '';
+    let finalized = false;
+    core.info(`Polling up to ${maximumChecks} times for package status updates`);
+
+    const timer = ms => new Promise( res => setTimeout(res, ms) );
+
+    while (statusChecks < maximumChecks) {
+        statusChecks += 1;
+        response = await axios.get(`${apiURL}/v2/apps/${appId}/packages/${packageId}`);
+        status = response.data.attributes.status;
+
+        core.info(`Checking package status [${statusChecks}]: ${status}`);
+
+        if (status === 'failure') {
+            core.error('Package build failed');
+            core.error(response.data.attributes.notes);
+            finalized = true;
+            break;
+        } else if (status === 'draft') {
+            core.info('Successful package upload');
+            finalized = true;
+            break;
+        }
+
+        timer(10000);
+    }
+
+    if (!finalized) {
+        throw new Error('Package build went too long without updates. Please check your upload in Dev Center.');
+    }
+
+    return status;
 }
 
 runner();
