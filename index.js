@@ -29,6 +29,10 @@ async function runner() {
         };
         let response = await client.getJson(`${apiURL}/v2/apps?app_key=${appKey}`);
         let data = response.result.json;
+        core.debug(response);
+        core.debug(response.result);
+        core.debug(response.result.json);
+        core.debug(response.result.data);
         core.debug(data);
         if (response.statusCode !== 200) {
             core.setFailed(`Invalid response while looking up App ${appKey}: ${data.message}`);
