@@ -108,7 +108,7 @@ async function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, s
     form.append('skip_testing', skipTesting);
 
     try {
-        const response = await axios.post(`${apiURL}/v2/apps/${appId}/packages/upload`, form, { headers: {...form.getHeaders()} });
+        const response = await axios.post(`${apiURL}/v2/apps/${appId}/packages/upload`, form, { headers: form.getHeaders() });
         if (response.status !== 200) {
             throw new Error(`Upload failed: ${response.data.message}`);
         }
