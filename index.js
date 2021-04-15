@@ -53,7 +53,8 @@ async function runner() {
         };
     
         core.info('Uploading package')
-        response = client.postJson(`${apiURL}/v2/apps/${appId}/packages/upload`, payload);
+        
+        response = await client.postJson(`${apiURL}/v2/apps/${appId}/packages/upload`, payload);
         data = response.result;
         if (response.statuscode !== 200) {
             core.error(data.message);
@@ -82,7 +83,7 @@ async function runner() {
         core.debug('Polling for package status updates');
         while (statusChecks < maximumChecks) {
             statusChecks += 1;
-            response = client.getJson(`${apiURL}/v2/apps/${appId}/packages/${packageId}`);
+            response = await client.getJson(`${apiURL}/v2/apps/${appId}/packages/${packageId}`);
             data = response.result;
             status = data.data.attributes.status;
     
