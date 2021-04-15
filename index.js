@@ -29,7 +29,7 @@ async function runner() {
         axios.defaults.headers.common['User-Agent'] = `corva/app-deployer`;
         axios.defaults.headers.common['X-Corva-App'] = appKey;
 
-        let appId = await convertAppKeyToId(appKey);
+        let appId = await convertAppKeyToId(apiURL, appKey);
         let packageFile = generatePackageFile();
         let packageId = await uploadPackageFile(apiURL, appId, packageFile, skipTesting, skipTesting);
         await updateNotes(apiURL, appId, packageId, notes);
@@ -42,7 +42,7 @@ async function runner() {
     }
 }
 
-async function convertAppKeyToId(appKey) {
+async function convertAppKeyToId(apiURL, appKey) {
     core.info('Requesting App ID from App Key');
     let response = await axios.get(`${apiURL}/v2/apps?app_key=${appKey}`);
 
