@@ -28,11 +28,7 @@ async function runner() {
             }
         };
         let response = await client.getJson(`${apiURL}/v2/apps?app_key=${appKey}`);
-        let data = response.result.json;
-        core.debug(response);
-        core.debug(response.result);
-        core.debug(response.result.json);
-        core.debug(response.result.data);
+        let data = response.result;
         core.debug(data);
         if (response.statusCode !== 200) {
             core.setFailed(`Invalid response while looking up App ${appKey}: ${data.message}`);
@@ -58,7 +54,7 @@ async function runner() {
     
         core.info('Uploading package')
         response = client.postJson(`${apiURL}/v2/apps/${appId}/packages/upload`, payload);
-        data = response.result.json;
+        data = response.result;
         if (response.statuscode !== 200) {
             core.error(data.message);
             core.setFailed(`Upload failed: ${data.message}`);
@@ -72,7 +68,7 @@ async function runner() {
         if (notes) {
             core.info('Updating package notes');
             response = client.patchJson(`${apiURL}/v2/apps/${appId}/packages/${packageId}`, {notes: notes});
-            data = response.result.json;
+            data = response.result;
             if (response.statusCode !== 200) {
                 core.error('Unable to update package notes. Please manually update notes in Dev Center.');
                 core.error(data.message);
@@ -87,7 +83,7 @@ async function runner() {
         while (statusChecks < maximumChecks) {
             statusChecks += 1;
             response = client.getJson(`${apiURL}/v2/apps/${appId}/packages/${packageId}`);
-            data = response.result.json;
+            data = response.result;
             status = data.data.attributes.status;
     
             core.info(`Checking package status [${statusChecks}]: ${status}`);
