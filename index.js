@@ -73,7 +73,7 @@ async function generatePackageFile() {
 
     core.info('Removing blacklisted directories');
     const blacklist = ['.git', '.gitignore'];
-    blacklist.forEach(function(blacklistPath) {
+    blacklist.forEach(async (blacklistPath) => {
         blacklistPath = path.join(tempStorage, blacklistPath);
         core.info(`Removing ${blacklistPath}`);
         await io.rmRF(blacklistPath);
