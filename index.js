@@ -31,7 +31,7 @@ async function runner() {
         axios.defaults.headers.common['X-Corva-App'] = appKey;
 
         let appId = await convertAppKeyToId(apiURL, appKey);
-        let packageFile = generatePackageFile();
+        let packageFile = await generatePackageFile();
         let packageId = await uploadPackageFile(apiURL, appId, packageFile, skipTesting, skipTesting);
         await updateNotes(apiURL, appId, packageId, notes);
         let status = await pollForPackageCompletion(apiURL, appId, packageId, 50);
@@ -63,7 +63,7 @@ async function convertAppKeyToId(apiURL, appKey) {
     return appId;
 }
 
-function generatePackageFile() {
+async function generatePackageFile() {
     core.info('Generating zipped package for app');
 
     const packagePath = path.join(os.tmpdir(), 'package.zip');
@@ -78,7 +78,7 @@ function generatePackageFile() {
 
     archive.pipe(stream);
     archive.directory('./', false);
-    archive.finalize();
+    await archive.finalize();
 
     core.info('Package successfully archived to a zip file');
 
