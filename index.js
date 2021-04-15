@@ -73,11 +73,11 @@ async function generatePackageFile() {
 
     core.info('Removing blacklisted directories');
     const blacklist = ['.git', '.gitignore'];
-    for (blacklistPath in blacklist) {
+    blacklist.forEach(function(blacklistPath) {
         blacklistPath = path.join(tempStorage, blacklistPath);
         core.info(`Removing ${blacklistPath}`);
         await io.rmRF(blacklistPath);
-    }
+    });
 
     core.info('Archiving files to zip')
     const packagePath = path.join(os.tmpdir(), 'package.zip');
