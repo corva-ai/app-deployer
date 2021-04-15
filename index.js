@@ -172,7 +172,7 @@ async function pollForPackageCompletion(apiURL, appId, packageId, maximumChecks)
             break;
         }
 
-        timer(10000);
+        await timer(10000);
     }
 
     if (!finalized) {
