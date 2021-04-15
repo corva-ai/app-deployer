@@ -157,13 +157,13 @@ async function pollForPackageCompletion(apiURL, appId, packageId, maximumChecks)
     while (statusChecks < maximumChecks) {
         statusChecks += 1;
         const response = await axios.get(`${apiURL}/v2/apps/${appId}/packages/${packageId}`);
-        status = response.data.attributes.status;
+        status = response.data.data.attributes.status;
 
         core.info(`Checking package status [${statusChecks}]: ${status}`);
 
         if (status === 'failure') {
             core.error('Package build failed');
-            core.error(response.data.attributes.notes);
+            core.error(response.data.data.attributes.notes);
             finalized = true;
             break;
         } else if (status === 'draft') {
