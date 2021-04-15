@@ -122,6 +122,7 @@ async function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, s
 
         return packageId;
     } catch (error) {
+        core.error(error);
         throw new Error(`Upload failed: ${error.response.data.message}`);
     }
 }
