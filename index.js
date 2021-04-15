@@ -4,6 +4,7 @@ const core = require('@actions/core');
 const FormData = require('form-data');
 const fs = require('fs');
 const github = require('@actions/github');
+const os = require('os');
 const path = require('path');
 
 async function runner() {
@@ -65,7 +66,7 @@ async function convertAppKeyToId(apiURL, appKey) {
 function generatePackageFile() {
     core.info('Generating zipped package for app');
 
-    const packagePath = './package.zip';
+    const packagePath = path.join(os.tmpdir(), 'package.zip');
     const stream = fs.createWriteStream(packagePath);
     const archive = archiver.create('zip', {});
     archive.on('error', function(error) {
