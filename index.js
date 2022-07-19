@@ -17,7 +17,7 @@ async function runner() {
     const skipAnalysis = core.getInput('skip-analysis');
     const skipTesting = core.getInput('skip-testing');
     const prebuildPackagePath = core.getInput('prebuild-package-path');
-    const ignoredFiles = core.getInput('ignored-files');
+    const ignoredPaths = core.getInput('ignored-paths');
     core.debug(`API Key: ${apiKey}`);
     core.debug(`API URL: ${apiURL}`);
     core.debug(`App Key: ${appKey}`);
@@ -25,14 +25,14 @@ async function runner() {
     core.debug(`Skip Analysis?: ${skipAnalysis}`);
     core.debug(`Skip Testing?: ${skipTesting}`);
     core.debug(`Prebuild package path?: ${prebuildPackagePath}`);
-    core.debug(`Ignored files?: ${ignoredFiles}`);
+    core.debug(`Ignored paths?: ${ignoredPaths}`);
     // Set up defaults for all API requests
-    axios.defaults.headers.common['Authorization'] = `API ${apiKey}`;
+    axios.defaults.headers.common.Authorization = `API ${apiKey}`;
     axios.defaults.headers.common['User-Agent'] = `corva/app-deployer`;
     axios.defaults.headers.common['X-Corva-App'] = appKey;
 
     const appId = await convertAppKeyToId(apiURL, appKey);
-    const packageFile = prebuildPackagePath || (await generatePackageFile(ignoredFiles));
+    const packageFile = prebuildPackagePath || (await generatePackageFile(ignoredPaths));
     const packageId = await uploadPackageFile(apiURL, appId, packageFile, skipTesting, skipTesting);
     await updateNotes(apiURL, appId, packageId, notes);
     const status = await pollForPackageCompletion(apiURL, appId, packageId, 50);
@@ -64,14 +64,14 @@ async function convertAppKeyToId(apiURL, appKey) {
   return appId;
 }
 
-async function generatePackageFile(ignoredFiles) {
+async function generatePackageFile(ignoredPaths) {
   const blacklist = ['.git', '.github', '.gitignore'];
 
   const { zipFileName } = await runFlow(ZIP_FLOW, {
     dirName: '.',
     // NOTE: we include all files in the directory and filter out blacklisted and ignored ones
     patterns: ['**/*', '.*'],
-    options: { ignoredFiles: ignoredFiles.split(' ').concat(blacklist), bumpVersion: 'skip' },
+    options: { ignoredFiles: ignoredPaths.split(' ').concat(blacklist), bumpVersion: 'skip' },
   });
 
   return zipFileName;

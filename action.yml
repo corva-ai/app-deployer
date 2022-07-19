@@ -30,8 +30,8 @@ inputs:
     description: 'Path to brebuild app zip'
     required: false
     default: ''
-  ignored-files:
-    description: 'File patterns to skip zip'
+  ignored-paths:
+    description: 'Path patterns to skip zip, separated by space'
     required: false
     default: ''
 outputs:
