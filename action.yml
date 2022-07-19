@@ -26,6 +26,14 @@ inputs:
     description: 'Skip automated testing such as pytest'
     required: false
     default: false
+  prebuild-package-path:
+    description: 'Path to brebuild app zip'
+    required: false
+    default: ''
+  ignored-files:
+    description: 'File patterns to skip zip'
+    required: false
+    default: ''
 outputs:
   package-id:
     description: 'Package ID that was deployed'
