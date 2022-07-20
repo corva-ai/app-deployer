@@ -18,6 +18,7 @@ async function runner() {
     const skipTesting = core.getInput('skip-testing');
     const prebuildPackagePath = core.getInput('prebuild-package-path');
     const ignoredPaths = core.getInput('ignored-paths');
+    const publish = core.getInput('publish') === 'true';
     core.debug(`API Key: ${apiKey}`);
     core.debug(`API URL: ${apiURL}`);
     core.debug(`App Key: ${appKey}`);
@@ -26,6 +27,7 @@ async function runner() {
     core.debug(`Skip Testing?: ${skipTesting}`);
     core.debug(`Prebuild package path?: ${prebuildPackagePath}`);
     core.debug(`Ignored paths?: ${ignoredPaths}`);
+    core.debug(`Publish?: ${publish}`);
     // Set up defaults for all API requests
     axios.defaults.headers.common.Authorization = `API ${apiKey}`;
     axios.defaults.headers.common['User-Agent'] = `corva/app-deployer`;
@@ -36,9 +38,11 @@ async function runner() {
     const packageId = await uploadPackageFile(apiURL, appId, packageFile, skipTesting, skipTesting);
     await updateNotes(apiURL, appId, packageId, notes);
     const status = await pollForPackageCompletion(apiURL, appId, packageId, 50);
-
     core.setOutput('package-id', packageId);
     core.setOutput('package-status', status);
+    if (publish && status === 'draft') {
+      await publishPackage(apiURL, appId, packageId);
+    }
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -51,8 +55,6 @@ async function convertAppKeyToId(apiURL, appKey) {
   if (response.status !== 200) {
     throw new Error(`Invalid response while looking up App ${appKey}: ${data.message}`);
   }
-
-  core.debug(response.data);
 
   if (!response.data || !response.data.data || response.data.data.length === 0) {
     throw new Error(`App ${appKey} not found, or your API key doesn't have permissions to see it`);
@@ -164,6 +166,22 @@ async function pollForPackageCompletion(apiURL, appId, packageId, maximumChecks)
   }
 
   return status;
+}
+
+async function publishPackage(apiURL, appId, packageId) {
+  core.info('Publishing package');
+
+  const { status } = await axios.patch(
+    `${apiURL}/v2/apps/${appId}/packages/${packageId}`,
+    { package: { status: 'published' } },
+    { headers: { Accept: 'application/json' } }
+  );
+
+  if (status === 200) {
+    core.info('Package was successfully published.');
+  } else {
+    core.error('Publishing failed. Please go to app page and publish it manually.');
+  }
 }
 
 runner();

@@ -34,6 +34,10 @@ inputs:
     description: 'Path patterns to skip zip, separated by space'
     required: false
     default: ''
+  publish:
+    description: 'Change status to published after package upload'
+    required: false
+    default: true
 outputs:
   package-id:
     description: 'Package ID that was deployed'
