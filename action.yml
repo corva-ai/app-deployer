@@ -37,7 +37,7 @@ inputs:
   publish:
     description: 'Change status to published after package upload'
     required: false
-    default: true
+    default: false
 outputs:
   package-id:
     description: 'Package ID that was deployed'
