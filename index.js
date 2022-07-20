@@ -74,6 +74,8 @@ async function generatePackageFile(ignoredPaths) {
     options: { ignoredFiles: ignoredPaths.split(' ').concat(blacklist), bumpVersion: 'skip' },
   });
 
+  core.info(`Zip file size: ${fs.statSync(zipFileName).size} bytes`);
+
   return zipFileName;
 }
 
