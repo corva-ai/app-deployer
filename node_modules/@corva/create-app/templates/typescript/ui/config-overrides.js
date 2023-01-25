@@ -1,5 +1,5 @@
 const { merge } = require('webpack-merge');
-const { getWebpackConfig } = require('@corva/ui/cjs');
+const { getWebpackConfig } = require('@corva/dc-platform-shared/cjs');
 
 module.exports = (env, argv) => {
   return merge(
