@@ -113,8 +113,8 @@ async function uploadPackageFile(
 
   const form = new FormData()
   form.append('package', fs.createReadStream(packageFilePath))
-  form.append('skip_analysis', skipAnalysis)
-  form.append('skip_testing', skipTesting)
+  form.append('skip_analysis', `${skipAnalysis}`)
+  form.append('skip_testing', `${skipTesting}`)
 
   try {
     const response = await axios.post(

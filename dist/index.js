@@ -130,8 +130,8 @@ function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, skipTes
         core.info('Uploading package');
         const form = new form_data_1.default();
         form.append('package', fs.createReadStream(packageFilePath));
-        form.append('skip_analysis', skipAnalysis);
-        form.append('skip_testing', skipTesting);
+        form.append('skip_analysis', `${skipAnalysis}`);
+        form.append('skip_testing', `${skipTesting}`);
         try {
             const response = yield axios_1.default.post(`${apiURL}/v2/apps/${appId}/packages/upload`, form, {
                 headers: Object.assign({ Accept: 'application/json' }, form.getHeaders())
