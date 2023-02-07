@@ -1,20 +1,23 @@
 type Step = {
-    message: string,
-    fn: (context: unknown) => Promise<void>
+  message: string
+  fn: (context: unknown) => Promise<void>
 }
 type Flow = {
-    name: string,
-    steps: (Flow | Step)[]
-};
+  name: string
+  steps: (Flow | Step)[]
+}
 
 declare module '@corva/create-app/lib/flows/zip' {
-    export const ZIP_FLOW: Flow
+  export const ZIP_FLOW: Flow
 }
 
 declare module '@corva/create-app/lib/flow' {
-    type Context = {
-        [key: string]: unknown
-    };
+  type Context = {
+    [key: string]: unknown
+  }
 
-    export function runFlow<T>(flow: Flow, context: Record<string, unknown>): Promise<any>
+  export function runFlow<T>(
+    flow: Flow,
+    context: Record<string, unknown>
+  ): Promise<any>
 }
