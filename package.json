@@ -2,9 +2,15 @@
   "name": "app-deployer",
   "version": "1.0.0",
   "description": "GitHub Action to deploy Corva Apps to Dev Center",
-  "main": "index.js",
+  "main": "lib/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "format": "prettier --write '**/*.ts'",
+    "format-check": "prettier --check '**/*.ts'",
+    "lint": "eslint src/**/*.ts",
+    "package": "ncc build --source-map --license licenses.txt",
+    "test": "jest",
+    "all": "npm run build && npm run format && npm run lint && npm run package && npm test"
   },
   "repository": {
     "type": "git",
@@ -18,9 +24,24 @@
   },
   "homepage": "https://github.com/corva-ai/app-deployer#readme",
   "dependencies": {
-    "@actions/core": "^1.2.7",
-    "@corva/create-app": "^0.34.0-4",
-    "axios": "^0.21.1",
+    "@actions/core": "^1.10.0",
+    "@corva/create-app": "^0.48.0-6",
+    "axios": "^1.3.2",
     "form-data": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.0",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
+    "@vercel/ncc": "^0.31.1",
+    "eslint": "^8.33.0",
+    "eslint-plugin-github": "^4.3.2",
+    "eslint-plugin-jest": "^25.3.2",
+    "jest": "^27.2.5",
+    "js-yaml": "^4.1.0",
+    "prettier": "2.5.1",
+    "ts-jest": "^27.1.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.4.4"
   }
 }
