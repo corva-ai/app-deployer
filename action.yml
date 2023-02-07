@@ -21,11 +21,11 @@ inputs:
   skip-analysis:
     description: 'Skip static analysis (linters) such as flake8 or pylint'
     required: false
-    default: false
+    default: 'false'
   skip-testing:
     description: 'Skip automated testing such as pytest'
     required: false
-    default: false
+    default: 'false'
   prebuild-package-path:
     description: 'Path to brebuild app zip'
     required: false
@@ -37,12 +37,12 @@ inputs:
   publish:
     description: 'Change status to published after package upload'
     required: false
-    default: false
+    default: 'false'
 outputs:
   package-id:
     description: 'Package ID that was deployed'
   package-status:
     description: 'Final status of the deployed package (draft is a successful deploy)'
 runs:
-  using: 'node12'
-  main: 'index.js'
+  using: 'node16'
+  main: 'dist/index.js'

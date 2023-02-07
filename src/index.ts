@@ -1,9 +1,9 @@
-const axios = require('axios').default;
-const core = require('@actions/core');
-const { runFlow } = require('@corva/create-app/lib/flow');
-const { ZIP_FLOW } = require('@corva/create-app/lib/flows/zip');
-const FormData = require('form-data');
-const fs = require('fs');
+import axios, { AxiosError } from 'axios'
+import * as core from '@actions/core';
+import { runFlow } from '@corva/create-app/lib/flow';
+import { ZIP_FLOW } from '@corva/create-app/lib/flows/zip';
+import  FormData from 'form-data';
+import * as fs from 'fs';
 
 async function runner() {
   try {
@@ -14,8 +14,8 @@ async function runner() {
     const apiURL = core.getInput('api-url');
     const appKey = core.getInput('app-key');
     const notes = core.getInput('notes');
-    const skipAnalysis = core.getInput('skip-analysis');
-    const skipTesting = core.getInput('skip-testing');
+    const skipAnalysis = core.getInput('skip-analysis') === 'true';
+    const skipTesting = core.getInput('skip-testing')  === 'true';
     const prebuildPackagePath = core.getInput('prebuild-package-path');
     const ignoredPaths = core.getInput('ignored-paths');
     const publish = core.getInput('publish') === 'true';
@@ -44,16 +44,16 @@ async function runner() {
       await publishPackage(apiURL, appId, packageId);
     }
   } catch (error) {
-    core.setFailed(error.message);
+    core.setFailed((error as Error).message);
   }
 }
 
-async function convertAppKeyToId(apiURL, appKey) {
+async function convertAppKeyToId(apiURL: string, appKey: string) {
   core.info('Requesting App ID from App Key');
   const response = await axios.get(`${apiURL}/v2/apps?app_key=${appKey}`);
 
   if (response.status !== 200) {
-    throw new Error(`Invalid response while looking up App ${appKey}: ${data.message}`);
+    throw new Error(`Invalid response while looking up App ${appKey}: ${response.data.message}`);
   }
 
   if (!response.data || !response.data.data || response.data.data.length === 0) {
@@ -66,7 +66,7 @@ async function convertAppKeyToId(apiURL, appKey) {
   return appId;
 }
 
-async function generatePackageFile(ignoredPaths) {
+async function generatePackageFile(ignoredPaths: string) {
   const blacklist = ['.git', '.github', '.gitignore'];
 
   const { zipFileName } = await runFlow(ZIP_FLOW, {
@@ -81,7 +81,7 @@ async function generatePackageFile(ignoredPaths) {
   return zipFileName;
 }
 
-async function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, skipTesting) {
+async function uploadPackageFile(apiURL: string, appId: number, packageFilePath: string, skipAnalysis: boolean, skipTesting: boolean) {
   core.info('Uploading package');
 
   const form = new FormData();
@@ -104,12 +104,12 @@ async function uploadPackageFile(apiURL, appId, packageFilePath, skipAnalysis, s
 
     return packageId;
   } catch (error) {
-    core.error(error);
-    throw new Error(`Upload failed: ${error.response.data.message}`);
+    core.error(error as Error);
+    throw new Error(`Upload failed: ${(((error as AxiosError).response?.data) as {message: string}).message}`);
   }
 }
 
-async function updateNotes(apiURL, appId, packageId, notes) {
+async function updateNotes(apiURL: string, appId:number, packageId: number, notes: string) {
   if (!notes) {
     core.info('No package version notes. Continuing.');
     return;
@@ -126,17 +126,17 @@ async function updateNotes(apiURL, appId, packageId, notes) {
       core.error('Continuing to verify package upload');
     }
   } catch (error) {
-    core.error(JSON.stringify(error.response.data));
+    core.error(JSON.stringify((error as AxiosError).response?.data));
   }
 }
 
-async function pollForPackageCompletion(apiURL, appId, packageId, maximumChecks) {
+async function pollForPackageCompletion(apiURL: string, appId:number, packageId: number, maximumChecks: number) {
   let statusChecks = 0;
   let status = '';
   let finalized = false;
   core.info(`Polling up to ${maximumChecks} times for package status updates`);
 
-  const timer = ms => new Promise(res => setTimeout(res, ms));
+  const timer = (ms: number) => new Promise(res => setTimeout(res, ms));
 
   while (statusChecks < maximumChecks) {
     statusChecks += 1;
@@ -168,7 +168,7 @@ async function pollForPackageCompletion(apiURL, appId, packageId, maximumChecks)
   return status;
 }
 
-async function publishPackage(apiURL, appId, packageId) {
+async function publishPackage(apiURL: string, appId:number, packageId: number,) {
   core.info('Publishing package');
 
   const { status } = await axios.patch(
